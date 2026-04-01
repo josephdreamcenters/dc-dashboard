@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dream Centers — All Org Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --green:#1D9E75;--green-light:#E1F5EE;--green-dark:#0F6E56;
+    --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#185FA5;
+    --amber:#BA7517;--amber-light:#FAEEDA;--amber-dark:#854F0B;
+    --lime:#639922;--lime-light:#EAF3DE;--lime-dark:#3B6D11;
+    --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#534AB7;
+    --coral:#D85A30;
+    --gray-50:#F8F7F4;--gray-100:#F1EFE8;--gray-200:#D3D1C7;
+    --gray-400:#888780;--gray-700:#444441;--gray-900:#1C1C1A;
+    --text:#1C1C1A;--text-muted:#6B6A64;--text-faint:#9B9A94;
+    --border:rgba(0,0,0,0.08);--surface:#FFFFFF;--bg:#F4F2ED;
+    --radius:10px;--radius-lg:14px;
+    --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+  .navbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+  .nav-brand{display:flex;align-items:center;gap:12px}
+  .nav-logo{width:36px;height:36px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;letter-spacing:.5px}
+  .nav-title{font-size:15px;font-weight:600;color:var(--text)}
+  .nav-subtitle{font-size:12px;color:var(--text-muted)}
+  .nav-right{display:flex;align-items:center;gap:16px}
+  .nav-updated{font-size:12px;color:var(--text-faint);font-family:'DM Mono',monospace}
+  .nav-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .container{max-width:1280px;margin:0 auto;padding:2rem}
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow)}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+  .section-left{display:flex;align-items:center;gap:10px}
+  .section-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .section-name{font-size:15px;font-weight:600;color:var(--text)}
+  .section-desc{font-size:12px;color:var(--text-muted);margin-top:1px}
+  .badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+  .metrics{display:grid;gap:10px;margin-bottom:1.25rem}
+  .metrics-3{grid-template-columns:repeat(3,1fr)}
+  .metrics-4{grid-template-columns:repeat(4,1fr)}
+  .metrics-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:768px){.metrics-3,.metrics-4,.metrics-2{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.metrics-3,.metrics-4,.metrics-2{grid-template-columns:1fr}}
+  .metric-card{background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .metric-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);margin-bottom:6px}
+  .metric-value{font-size:26px;font-weight:600;color:var(--text);line-height:1.1}
+  .metric-change{font-size:11px;color:var(--text-faint);margin-top:4px;font-family:'DM Mono',monospace}
+  .metric-change.up{color:var(--green-dark)}
+  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:640px){.charts-row{grid-template-columns:1fr}}
+  .chart-card{background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .chart-title{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+  .chart-wrap{position:relative;width:100%}
+  .appt-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .appt-name{font-size:12px;color:var(--text-muted);width:120px;flex-shrink:0}
+  .appt-track-outer{flex:1;background:rgba(0,0,0,0.08);border-radius:3px;height:7px;overflow:hidden}
+  .appt-bar{height:100%;border-radius:3px}
+  .appt-n{font-size:12px;color:var(--text-faint);width:36px;text-align:right;font-family:'DM Mono',monospace;flex-shrink:0}
+  .outcomes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+  @media(max-width:480px){.outcomes-grid{grid-template-columns:1fr 1fr}}
+  .outcome-card{background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .outcome-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);margin-bottom:6px}
+  .outcome-value{font-size:28px;font-weight:600;color:var(--green-dark)}
+  .fin-legend{display:flex;gap:16px;margin-bottom:10px}
+  .fin-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+  .fin-dot{width:10px;height:10px;border-radius:2px}
+  .virtuous .section-icon{background:var(--green-light)} .virtuous .metric-card{border-left:3px solid var(--green)}
+  .athena   .section-icon{background:var(--blue-light)}  .athena   .metric-card{border-left:3px solid var(--blue)}
+  .volhub   .section-icon{background:var(--amber-light)} .volhub   .metric-card{border-left:3px solid var(--amber)}
+  .qbo      .section-icon{background:var(--lime-light)}  .qbo      .metric-card{border-left:3px solid var(--lime)}
+  .sfdc     .section-icon{background:var(--purple-light)}.sfdc     .metric-card{border-left:3px solid var(--purple)}
+  .status-bar{background:var(--amber-light);border:1px solid rgba(186,117,23,.25);border-radius:var(--radius);padding:10px 16px;margin-bottom:1.25rem;font-size:12px;color:var(--amber-dark);display:flex;align-items:center;gap:8px}
+  .status-dot{width:7px;height:7px;background:var(--amber);border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">DC</div>
+    <div><div class="nav-title">Dream Centers</div><div class="nav-subtitle">All Org Dashboard</div></div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-dot"></div>
+    <div class="nav-updated" id="lastUpdated">Loading...</div>
+  </div>
+</nav>
+<main class="container">
+  <div class="status-bar"><div class="status-dot"></div><span>Dashboard is running on <strong>sample data</strong>. Replace the <code>DATA</code> object in the &lt;script&gt; section with live API responses as each integration is connected.</span></div>
+
+  <div class="section virtuous">
+    <div class="section-head"><div class="section-left"><div class="section-icon">💚</div><div><div class="section-name">Virtuous</div><div class="section-desc">Donor engagement &amp; fundraising</div></div></div><span class="badge" style="background:var(--green-light);color:var(--green-dark)">Fundraising</span></div>
+    <div class="metrics metrics-3">
+      <div class="metric-card"><div class="metric-label">Monthly Dream Makers</div><div class="metric-value" id="v-dreammakers">—</div><div class="metric-change up" id="v-dm-change">—</div></div>
+      <div class="metric-card"><div class="metric-label">Monthly total donations</div><div class="metric-value" id="v-donations">—</div><div class="metric-change up" id="v-don-change">—</div></div>
+      <div class="metric-card"><div class="metric-label">Leads developed</div><div class="metric-value" id="v-leads">—</div><div class="metric-change">This month</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Dream Makers — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-dm"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Total donations — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-don"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="section athena">
+    <div class="section-head"><div class="section-left"><div class="section-icon">🩺</div><div><div class="section-name">Athena</div><div class="section-desc">Patient services &amp; appointments</div></div></div><span class="badge" style="background:var(--blue-light);color:var(--blue-dark)">Healthcare</span></div>
+    <div class="metrics metrics-3">
+      <div class="metric-card"><div class="metric-label">Total unique patients</div><div class="metric-value" id="a-patients">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Total appointments</div><div class="metric-value" id="a-appts">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Appointments this month</div><div class="metric-value" id="a-appts-month">—</div><div class="metric-change up" id="a-appts-change">—</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Monthly appointments — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-appts"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">Appointments by type — this month</div><div id="appt-types" style="margin-top:4px"></div></div>
+    </div>
+  </div>
+
+  <div class="section volhub">
+    <div class="section-head"><div class="section-left"><div class="section-icon">🤝</div><div><div class="section-name">VolunteerHub</div><div class="section-desc">Community engagement &amp; service hours</div></div></div><span class="badge" style="background:var(--amber-light);color:var(--amber-dark)">Volunteers</span></div>
+    <div class="metrics metrics-2">
+      <div class="metric-card"><div class="metric-label">Total volunteers</div><div class="metric-value" id="vh-volunteers">—</div><div class="metric-change">Active &amp; historical</div></div>
+      <div class="metric-card"><div class="metric-label">Total volunteer hours</div><div class="metric-value" id="vh-hours">—</div><div class="metric-change">All time</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Volunteer hours — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-hours"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">New volunteers — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-newvol"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="section qbo">
+    <div class="section-head"><div class="section-left"><div class="section-icon">📊</div><div><div class="section-name">QuickBooks Online</div><div class="section-desc">Income, expenses &amp; cash flow</div></div></div><span class="badge" style="background:var(--lime-light);color:var(--lime-dark)">Finance</span></div>
+    <div class="metrics metrics-3">
+      <div class="metric-card"><div class="metric-label">Total income (YTD)</div><div class="metric-value" id="qbo-income">—</div><div class="metric-change" id="qbo-period">—</div></div>
+      <div class="metric-card"><div class="metric-label">Total expenses (YTD)</div><div class="metric-value" id="qbo-expenses">—</div><div class="metric-change" id="qbo-period2">—</div></div>
+      <div class="metric-card"><div class="metric-label">Monthly cash burn rate</div><div class="metric-value" id="qbo-burn">—</div><div class="metric-change">3-month average</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="fin-legend"><div class="fin-legend-item"><div class="fin-dot" style="background:var(--lime)"></div>Income</div><div class="fin-legend-item"><div class="fin-dot" style="background:var(--coral)"></div>Expenses</div></div>
+      <div class="chart-title">Income vs. expenses — 6 months</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-fin"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section sfdc">
+    <div class="section-head"><div class="section-left"><div class="section-icon">🏠</div><div><div class="section-name">Salesforce</div><div class="section-desc">Safe housing, programs &amp; outcomes</div></div></div><span class="badge" style="background:var(--purple-light);color:var(--purple-dark)">Programs</span></div>
+    <div class="metrics metrics-4">
+      <div class="metric-card"><div class="metric-label">Nights in safe housing</div><div class="metric-value" id="sf-nights">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Total families</div><div class="metric-value" id="sf-families">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Total kids</div><div class="metric-value" id="sf-kids">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Degrees earned</div><div class="metric-value" id="sf-degrees">—</div><div class="metric-change">All time</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);margin-bottom:10px">Outcomes</div>
+    <div class="outcomes-grid">
+      <div class="outcome-card"><div class="outcome-label">Safe</div><div class="outcome-value" id="sf-safe">—</div></div>
+      <div class="outcome-card"><div class="outcome-label">Stable housing</div><div class="outcome-value" id="sf-stable">—</div></div>
+      <div class="outcome-card"><div class="outcome-label">Minimal subsidies</div><div class="outcome-value" id="sf-subsidy">—</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Nights in safe housing — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-nights"></canvas></div></div>
+      <div class="chart-card">
+        <div class="fin-legend" style="margin-bottom:8px"><div class="fin-legend-item"><div class="fin-dot" style="background:var(--purple)"></div>Families</div><div class="fin-legend-item"><div class="fin-dot" style="background:#AFA9EC"></div>Kids</div></div>
+        <div class="chart-title">Families &amp; kids served — 6 months</div>
+        <div class="chart-wrap" style="height:130px"><canvas id="chart-fam"></canvas></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const DATA={
+  virtuous:{dreamMakers:1248,dreamMakersChange:'+64 vs. last month',totalDonations:184320,donationsChange:'+12% vs. last month',leadsThisMonth:312,monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],dreamMakersTrend:[1102,1148,1180,1196,1184,1248],donationsTrend:[148000,155000,162000,158000,164000,184320]},
+  athena:{uniquePatients:4821,totalAppointments:18440,apptsThisMonth:643,apptsChange:'+8% vs. last month',monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],apptsTrend:[558,572,591,612,595,643],apptTypes:[{name:'Primary care',count:248},{name:'Mental health',count:182},{name:'Dental',count:104},{name:'Specialty',count:71},{name:'Other',count:38}]},
+  volunteerhub:{totalVolunteers:2107,totalHours:41830,monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],hoursTrend:[6200,6800,7400,7100,7300,7030],newVolsTrend:[280,310,340,298,325,290]},
+  qbo:{totalIncome:1204800,totalExpenses:987200,cashBurnRate:72400,ytdLabel:'Jan \u2013 Mar 2026',monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],incomeTrend:[192000,204000,198000,201000,198000,211800],expensesTrend:[168000,172000,165000,175000,170000,167200]},
+  salesforce:{nightsInHousing:28640,totalFamilies:1183,totalKids:2791,degrees:347,outcomes:{safe:'94%',stable:'81%',subsidy:'68%'},monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],nightsTrend:[4200,4580,5100,4900,4820,4740],familiesTrend:[168,181,195,189,192,198],kidsTrend:[392,428,461,449,455,468]}
+};
+const fmt=n=>n.toLocaleString(),fmtUSD=n=>'$'+n.toLocaleString(),fmtK=v=>'$'+(v/1000).toFixed(0)+'k';
+const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+const gc='rgba(0,0,0,0.05)',tc='#888780';
+function bOpts(yf){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11,family:'DM Mono'}},border:{display:false}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11,family:'DM Mono'},callback:yf||undefined},border:{display:false}}}}}
+function lineChart(id,labels,datasets,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'line',data:{labels,datasets:datasets.map(d=>({data:d.data,borderColor:d.color,backgroundColor:d.color+'14',fill:d.fill!==false,tension:0.4,pointRadius:3,pointHoverRadius:5,borderWidth:2,borderDash:d.dash||[]}))},options:bOpts(yf)})}
+function barChart(id,labels,data,color,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color+'cc',borderRadius:4}]},options:bOpts(yf)})}
+function groupedBar(id,labels,d1,d2,c1,c2,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'bar',data:{labels,datasets:[{label:'Income',data:d1,backgroundColor:c1+'bb',borderRadius:4},{label:'Expenses',data:d2,backgroundColor:c2+'bb',borderRadius:4}]},options:bOpts(yf)})}
+function renderAll(){
+  const now=new Date();set('lastUpdated','Updated '+now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' at '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
+  const v=DATA.virtuous;set('v-dreammakers',fmt(v.dreamMakers));set('v-dm-change',v.dreamMakersChange);set('v-donations',fmtUSD(v.totalDonations));set('v-don-change',v.donationsChange);set('v-leads',fmt(v.leadsThisMonth));
+  lineChart('chart-dm',v.monthLabels,[{data:v.dreamMakersTrend,color:'#1D9E75'}]);lineChart('chart-don',v.monthLabels,[{data:v.donationsTrend,color:'#1D9E75'}],fmtK);
+  const a=DATA.athena;set('a-patients',fmt(a.uniquePatients));set('a-appts',fmt(a.totalAppointments));set('a-appts-month',fmt(a.apptsThisMonth));set('a-appts-change',a.apptsChange);
+  barChart('chart-appts',a.monthLabels,a.apptsTrend,'#378ADD');
+  const mx=Math.max(...a.apptTypes.map(t=>t.count));
+  document.getElementById('appt-types').innerHTML=a.apptTypes.map(t=>`<div class="appt-row"><div class="appt-name">${t.name}</div><div class="appt-track-outer"><div class="appt-bar" style="width:${Math.round(t.count/mx*100)}%;background:#378ADD"></div></div><div class="appt-n">${t.count}</div></div>`).join('');
+  const vh=DATA.volunteerhub;set('vh-volunteers',fmt(vh.totalVolunteers));set('vh-hours',fmt(vh.totalHours));
+  barChart('chart-hours',vh.monthLabels,vh.hoursTrend,'#BA7517');lineChart('chart-newvol',vh.monthLabels,[{data:vh.newVolsTrend,color:'#BA7517'}]);
+  const q=DATA.qbo;set('qbo-income',fmtUSD(q.totalIncome));set('qbo-expenses',fmtUSD(q.totalExpenses));set('qbo-burn',fmtUSD(q.cashBurnRate));set('qbo-period',q.ytdLabel);set('qbo-period2',q.ytdLabel);
+  groupedBar('chart-fin',q.monthLabels,q.incomeTrend,q.expensesTrend,'#639922','#D85A30',fmtK);
+  const sf=DATA.salesforce;set('sf-nights',fmt(sf.nightsInHousing));set('sf-families',fmt(sf.totalFamilies));set('sf-kids',fmt(sf.totalKids));set('sf-degrees',fmt(sf.degrees));set('sf-safe',sf.outcomes.safe);set('sf-stable',sf.outcomes.stable);set('sf-subsidy',sf.outcomes.subsidy);
+  barChart('chart-nights',sf.monthLabels,sf.nightsTrend,'#7F77DD');
+  lineChart('chart-fam',sf.monthLabels,[{data:sf.familiesTrend,color:'#7F77DD',fill:false},{data:sf.kidsTrend,color:'#AFA9EC',fill:false,dash:[4,3]}]);
+}
+renderAll();
+</script>
+</body>
+</html>
