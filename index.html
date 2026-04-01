@@ -14,6 +14,7 @@
     --amber:#BA7517;--amber-light:#FAEEDA;--amber-dark:#854F0B;
     --lime:#639922;--lime-light:#EAF3DE;--lime-dark:#3B6D11;
     --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#534AB7;
+    --teal:#2A9D8F;--teal-light:#E0F5F3;--teal-dark:#1A7268;
     --coral:#D85A30;
     --gray-50:#F8F7F4;--gray-100:#F1EFE8;--gray-200:#D3D1C7;
     --gray-400:#888780;--gray-700:#444441;--gray-900:#1C1C1A;
@@ -74,6 +75,7 @@
   .volhub   .section-icon{background:var(--amber-light)} .volhub   .metric-card{border-left:3px solid var(--amber)}
   .qbo      .section-icon{background:var(--lime-light)}  .qbo      .metric-card{border-left:3px solid var(--lime)}
   .sfdc     .section-icon{background:var(--purple-light)}.sfdc     .metric-card{border-left:3px solid var(--purple)}
+  .simpleaccess .section-icon{background:var(--teal-light)} .simpleaccess .metric-card{border-left:3px solid var(--teal)}
   .loading{text-align:center;padding:4rem;color:var(--text-faint);font-size:14px}
   .error-bar{background:#FEF0EB;border:1px solid rgba(250,70,22,.2);border-left:3px solid #FA4616;border-radius:var(--radius);padding:10px 16px;margin-bottom:1.25rem;font-size:12px;color:#c64106;display:none}
 </style>
@@ -117,6 +119,17 @@
     <div class="charts-row">
       <div class="chart-card"><div class="chart-title">Monthly appointments — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-appts"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">Appointments by type — this month</div><div id="appt-types" style="margin-top:4px"></div></div>
+    </div>
+  </div>
+
+  <div class="section simpleaccess">
+    <div class="section-head"><div class="section-left"><div class="section-icon">🧠</div><div><div class="section-name">Simple Access</div><div class="section-desc">Counseling patients &amp; sessions</div></div></div><span class="badge" style="background:var(--teal-light);color:var(--teal-dark)">Counseling</span></div>
+    <div class="metrics metrics-3">
+      <div class="metric-card"><div class="metric-label">Total counseling patients</div><div class="metric-value" id="sa-patients">—</div><div class="metric-change">All time</div></div>
+      <div class="metric-card"><div class="metric-label">Patients this month</div><div class="metric-value" id="sa-patients-month">—</div><div class="metric-change up" id="sa-patients-change">—</div></div>
+    </div>
+    <div class="charts-row" style="grid-template-columns:1fr">
+      <div class="chart-card"><div class="chart-title">Counseling patients — 6 months</div><div class="chart-wrap" style="height:150px"><canvas id="chart-sa"></canvas></div></div>
     </div>
   </div>
 
@@ -225,6 +238,13 @@ async function loadData(){
       const mx=Math.max(...apptTypes.map(t=>t.count));
       document.getElementById('appt-types').innerHTML=apptTypes.map(t=>`<div class="appt-row"><div class="appt-name">${t.name}</div><div class="appt-track-outer"><div class="appt-bar" style="width:${Math.round(t.count/mx*100)}%;background:#378ADD"></div></div><div class="appt-n">${t.count}</div></div>`).join('');
     }
+
+    // Simple Access
+    set('sa-patients',fmt(d.sa_total_patients));
+    set('sa-patients-month',fmt(d.sa_patients_this_month));
+    set('sa-patients-change',d.sa_patients_change||'—');
+    const saT=parseArr(d.sa_patients_trend);
+    if(saT.length) barChart('chart-sa',MONTHS,saT,'#2A9D8F');
 
     // VolunteerHub
     set('vh-volunteers',fmt(d.vh_total_volunteers));
