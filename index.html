@@ -63,7 +63,6 @@
   .appt-bar{height:100%;border-radius:3px}
   .appt-n{font-size:12px;color:var(--text-faint);width:36px;text-align:right;font-family:'DM Mono',monospace;flex-shrink:0}
   .outcomes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
-  @media(max-width:480px){.outcomes-grid{grid-template-columns:1fr 1fr}}
   .outcome-card{background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
   .outcome-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);margin-bottom:6px}
   .outcome-value{font-size:28px;font-weight:600;color:var(--green-dark)}
@@ -75,8 +74,8 @@
   .volhub   .section-icon{background:var(--amber-light)} .volhub   .metric-card{border-left:3px solid var(--amber)}
   .qbo      .section-icon{background:var(--lime-light)}  .qbo      .metric-card{border-left:3px solid var(--lime)}
   .sfdc     .section-icon{background:var(--purple-light)}.sfdc     .metric-card{border-left:3px solid var(--purple)}
-  .status-bar{background:var(--amber-light);border:1px solid rgba(186,117,23,.25);border-radius:var(--radius);padding:10px 16px;margin-bottom:1.25rem;font-size:12px;color:var(--amber-dark);display:flex;align-items:center;gap:8px}
-  .status-dot{width:7px;height:7px;background:var(--amber);border-radius:50%;flex-shrink:0}
+  .loading{text-align:center;padding:4rem;color:var(--text-faint);font-size:14px}
+  .error-bar{background:#FEF0EB;border:1px solid rgba(250,70,22,.2);border-left:3px solid #FA4616;border-radius:var(--radius);padding:10px 16px;margin-bottom:1.25rem;font-size:12px;color:#c64106;display:none}
 </style>
 </head>
 <body>
@@ -91,7 +90,9 @@
   </div>
 </nav>
 <main class="container">
-  <div class="status-bar"><div class="status-dot"></div><span>Dashboard is running on <strong>sample data</strong>. Replace the <code>DATA</code> object in the &lt;script&gt; section with live API responses as each integration is connected.</span></div>
+  <div class="error-bar" id="errorBar"></div>
+  <div id="loadingMsg" class="loading">Loading latest data...</div>
+  <div id="dashContent" style="display:none">
 
   <div class="section virtuous">
     <div class="section-head"><div class="section-left"><div class="section-icon">💚</div><div><div class="section-name">Virtuous</div><div class="section-desc">Donor engagement &amp; fundraising</div></div></div><span class="badge" style="background:var(--green-light);color:var(--green-dark)">Fundraising</span></div>
@@ -168,39 +169,105 @@
       </div>
     </div>
   </div>
+
+  </div>
 </main>
 <script>
-const DATA={
-  virtuous:{dreamMakers:1248,dreamMakersChange:'+64 vs. last month',totalDonations:184320,donationsChange:'+12% vs. last month',leadsThisMonth:312,monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],dreamMakersTrend:[1102,1148,1180,1196,1184,1248],donationsTrend:[148000,155000,162000,158000,164000,184320]},
-  athena:{uniquePatients:4821,totalAppointments:18440,apptsThisMonth:643,apptsChange:'+8% vs. last month',monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],apptsTrend:[558,572,591,612,595,643],apptTypes:[{name:'Primary care',count:248},{name:'Mental health',count:182},{name:'Dental',count:104},{name:'Specialty',count:71},{name:'Other',count:38}]},
-  volunteerhub:{totalVolunteers:2107,totalHours:41830,monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],hoursTrend:[6200,6800,7400,7100,7300,7030],newVolsTrend:[280,310,340,298,325,290]},
-  qbo:{totalIncome:1204800,totalExpenses:987200,cashBurnRate:72400,ytdLabel:'Jan \u2013 Mar 2026',monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],incomeTrend:[192000,204000,198000,201000,198000,211800],expensesTrend:[168000,172000,165000,175000,170000,167200]},
-  salesforce:{nightsInHousing:28640,totalFamilies:1183,totalKids:2791,degrees:347,outcomes:{safe:'94%',stable:'81%',subsidy:'68%'},monthLabels:['Oct','Nov','Dec','Jan','Feb','Mar'],nightsTrend:[4200,4580,5100,4900,4820,4740],familiesTrend:[168,181,195,189,192,198],kidsTrend:[392,428,461,449,455,468]}
-};
-const fmt=n=>n.toLocaleString(),fmtUSD=n=>'$'+n.toLocaleString(),fmtK=v=>'$'+(v/1000).toFixed(0)+'k';
+const SUPABASE_URL='https://kktwvlvqilblgzuxkzhu.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrdHd2bHZxaWxibGd6dXhremh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMTQwMTAsImV4cCI6MjA5MDU5MDAxMH0.w8eRa-kEPCgi6HDMma64VSwpAbGRUP2Zw1THBVtum5Q';
+
+const fmt=n=>n!=null?Number(n).toLocaleString():'—';
+const fmtUSD=n=>n!=null?'$'+Number(n).toLocaleString():'—';
+const fmtK=v=>'$'+(v/1000).toFixed(0)+'k';
 const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+const parseArr=s=>{try{return JSON.parse(s)||[]}catch{return[]}};
+const MONTHS=['Oct','Nov','Dec','Jan','Feb','Mar'];
 const gc='rgba(0,0,0,0.05)',tc='#888780';
+
 function bOpts(yf){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11,family:'DM Mono'}},border:{display:false}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11,family:'DM Mono'},callback:yf||undefined},border:{display:false}}}}}
 function lineChart(id,labels,datasets,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'line',data:{labels,datasets:datasets.map(d=>({data:d.data,borderColor:d.color,backgroundColor:d.color+'14',fill:d.fill!==false,tension:0.4,pointRadius:3,pointHoverRadius:5,borderWidth:2,borderDash:d.dash||[]}))},options:bOpts(yf)})}
 function barChart(id,labels,data,color,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color+'cc',borderRadius:4}]},options:bOpts(yf)})}
 function groupedBar(id,labels,d1,d2,c1,c2,yf){const c=document.getElementById(id);if(!c)return;new Chart(c,{type:'bar',data:{labels,datasets:[{label:'Income',data:d1,backgroundColor:c1+'bb',borderRadius:4},{label:'Expenses',data:d2,backgroundColor:c2+'bb',borderRadius:4}]},options:bOpts(yf)})}
-function renderAll(){
-  const now=new Date();set('lastUpdated','Updated '+now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' at '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
-  const v=DATA.virtuous;set('v-dreammakers',fmt(v.dreamMakers));set('v-dm-change',v.dreamMakersChange);set('v-donations',fmtUSD(v.totalDonations));set('v-don-change',v.donationsChange);set('v-leads',fmt(v.leadsThisMonth));
-  lineChart('chart-dm',v.monthLabels,[{data:v.dreamMakersTrend,color:'#1D9E75'}]);lineChart('chart-don',v.monthLabels,[{data:v.donationsTrend,color:'#1D9E75'}],fmtK);
-  const a=DATA.athena;set('a-patients',fmt(a.uniquePatients));set('a-appts',fmt(a.totalAppointments));set('a-appts-month',fmt(a.apptsThisMonth));set('a-appts-change',a.apptsChange);
-  barChart('chart-appts',a.monthLabels,a.apptsTrend,'#378ADD');
-  const mx=Math.max(...a.apptTypes.map(t=>t.count));
-  document.getElementById('appt-types').innerHTML=a.apptTypes.map(t=>`<div class="appt-row"><div class="appt-name">${t.name}</div><div class="appt-track-outer"><div class="appt-bar" style="width:${Math.round(t.count/mx*100)}%;background:#378ADD"></div></div><div class="appt-n">${t.count}</div></div>`).join('');
-  const vh=DATA.volunteerhub;set('vh-volunteers',fmt(vh.totalVolunteers));set('vh-hours',fmt(vh.totalHours));
-  barChart('chart-hours',vh.monthLabels,vh.hoursTrend,'#BA7517');lineChart('chart-newvol',vh.monthLabels,[{data:vh.newVolsTrend,color:'#BA7517'}]);
-  const q=DATA.qbo;set('qbo-income',fmtUSD(q.totalIncome));set('qbo-expenses',fmtUSD(q.totalExpenses));set('qbo-burn',fmtUSD(q.cashBurnRate));set('qbo-period',q.ytdLabel);set('qbo-period2',q.ytdLabel);
-  groupedBar('chart-fin',q.monthLabels,q.incomeTrend,q.expensesTrend,'#639922','#D85A30',fmtK);
-  const sf=DATA.salesforce;set('sf-nights',fmt(sf.nightsInHousing));set('sf-families',fmt(sf.totalFamilies));set('sf-kids',fmt(sf.totalKids));set('sf-degrees',fmt(sf.degrees));set('sf-safe',sf.outcomes.safe);set('sf-stable',sf.outcomes.stable);set('sf-subsidy',sf.outcomes.subsidy);
-  barChart('chart-nights',sf.monthLabels,sf.nightsTrend,'#7F77DD');
-  lineChart('chart-fam',sf.monthLabels,[{data:sf.familiesTrend,color:'#7F77DD',fill:false},{data:sf.kidsTrend,color:'#AFA9EC',fill:false,dash:[4,3]}]);
+
+async function loadData(){
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/dashboard_data?id=eq.main&select=*`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    if(!res.ok) throw new Error('Failed to load data');
+    const rows=await res.json();
+    const d=rows[0]||{};
+
+    document.getElementById('loadingMsg').style.display='none';
+    document.getElementById('dashContent').style.display='block';
+
+    const now=new Date();
+    set('lastUpdated','Updated '+now.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' at '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
+
+    // Virtuous
+    set('v-dreammakers',fmt(d.v_dream_makers));
+    set('v-dm-change',d.v_dream_makers_change||'—');
+    set('v-donations',fmtUSD(d.v_total_donations));
+    set('v-don-change',d.v_donations_change||'—');
+    set('v-leads',fmt(d.v_leads));
+    const dmT=parseArr(d.v_dm_trend);
+    const donT=parseArr(d.v_donations_trend);
+    if(dmT.length)  lineChart('chart-dm', MONTHS,[{data:dmT,color:'#1D9E75'}]);
+    if(donT.length) lineChart('chart-don',MONTHS,[{data:donT,color:'#1D9E75'}],fmtK);
+
+    // Athena
+    set('a-patients',fmt(d.a_unique_patients));
+    set('a-appts',fmt(d.a_total_appointments));
+    set('a-appts-month',fmt(d.a_appts_this_month));
+    set('a-appts-change',d.a_appts_change||'—');
+    const apptT=parseArr(d.a_appts_trend);
+    if(apptT.length) barChart('chart-appts',MONTHS,apptT,'#378ADD');
+    const apptTypes=parseArr(d.a_appt_types);
+    if(apptTypes.length){
+      const mx=Math.max(...apptTypes.map(t=>t.count));
+      document.getElementById('appt-types').innerHTML=apptTypes.map(t=>`<div class="appt-row"><div class="appt-name">${t.name}</div><div class="appt-track-outer"><div class="appt-bar" style="width:${Math.round(t.count/mx*100)}%;background:#378ADD"></div></div><div class="appt-n">${t.count}</div></div>`).join('');
+    }
+
+    // VolunteerHub
+    set('vh-volunteers',fmt(d.vh_total_volunteers));
+    set('vh-hours',fmt(d.vh_total_hours));
+    const hoursT=parseArr(d.vh_hours_trend);
+    const newVolT=parseArr(d.vh_new_vols_trend);
+    if(hoursT.length)  barChart('chart-hours', MONTHS,hoursT, '#BA7517');
+    if(newVolT.length) lineChart('chart-newvol',MONTHS,[{data:newVolT,color:'#BA7517'}]);
+
+    // QBO
+    set('qbo-income',  fmtUSD(d.qbo_total_income));
+    set('qbo-expenses',fmtUSD(d.qbo_total_expenses));
+    set('qbo-burn',    fmtUSD(d.qbo_cash_burn));
+    set('qbo-period',  d.qbo_ytd_label||'—');
+    set('qbo-period2', d.qbo_ytd_label||'—');
+    const incT=parseArr(d.qbo_income_trend);
+    const expT=parseArr(d.qbo_expenses_trend);
+    if(incT.length&&expT.length) groupedBar('chart-fin',MONTHS,incT,expT,'#639922','#D85A30',fmtK);
+
+    // Salesforce
+    set('sf-nights',  fmt(d.sf_nights));
+    set('sf-families',fmt(d.sf_families));
+    set('sf-kids',    fmt(d.sf_kids));
+    set('sf-degrees', fmt(d.sf_degrees));
+    set('sf-safe',    d.sf_safe||'—');
+    set('sf-stable',  d.sf_stable||'—');
+    set('sf-subsidy', d.sf_subsidy||'—');
+    const nightsT=parseArr(d.sf_nights_trend);
+    const famT=parseArr(d.sf_families_trend);
+    const kidsT=parseArr(d.sf_kids_trend);
+    if(nightsT.length) barChart('chart-nights',MONTHS,nightsT,'#7F77DD');
+    if(famT.length&&kidsT.length) lineChart('chart-fam',MONTHS,[{data:famT,color:'#7F77DD',fill:false},{data:kidsT,color:'#AFA9EC',fill:false,dash:[4,3]}]);
+
+  }catch(err){
+    document.getElementById('loadingMsg').style.display='none';
+    const eb=document.getElementById('errorBar');
+    eb.style.display='block';
+    eb.textContent='Could not load data from database. Please check your connection and try again.';
+    console.error(err);
+  }
 }
-renderAll();
+
+loadData();
 </script>
 </body>
 </html>
