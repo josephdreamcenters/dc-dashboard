@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dream Centers — Simple Access Data Entry</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--color:#2A9D8F;--color-light:#E0F5F3;--color-dark:#1A7268;--text:#1C1C1A;--text-muted:#6B6A64;--text-faint:#9B9A94;--border:rgba(0,0,0,0.08);--bg:#F4F2ED;--surface:#fff;--gray-50:#F8F7F4;--radius:10px;--radius-lg:14px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+  .navbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:12px;height:60px;position:sticky;top:0;z-index:100}
+  .nav-logo{width:36px;height:36px;background:var(--color);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
+  .nav-title{font-size:15px;font-weight:600;color:var(--text)}
+  .nav-sub{font-size:12px;color:var(--text-muted)}
+  .container{max-width:680px;margin:0 auto;padding:2rem}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .card-title::before{content:'';display:block;width:4px;height:20px;background:var(--color);border-radius:2px}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .fields-3{grid-template-columns:1fr 1fr 1fr}
+  .field{display:flex;flex-direction:column;gap:5px}
+  @media(max-width:500px){.fields,.fields-3{grid-template-columns:1fr}}
+  label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint)}
+  input{width:100%;height:40px;background:var(--gray-50);border:1px solid var(--border);border-radius:var(--radius);padding:0 12px;font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .15s}
+  input:focus{border-color:var(--color);background:var(--surface)}
+  .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+  .trend-toggle{margin-top:1.25rem;padding-top:1rem;border-top:1px dashed var(--border)}
+  .trend-label{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .trend-arrow{font-size:10px;transition:transform .2s;color:var(--text-faint)}
+  .trend-arrow.open{transform:rotate(90deg)}
+  .trend-fields{display:none;flex-direction:column;gap:10px}
+  .trend-fields.visible{display:flex}
+  .month-grid{display:grid;grid-template-columns:100px repeat(6,1fr);gap:8px;align-items:center}
+  .month-heading{font-size:11px;font-weight:500;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px}
+  .mi{height:36px!important;font-size:13px!important;text-align:center;padding:0 4px!important}
+  .btn{width:100%;height:44px;background:var(--color);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s,transform .1s;margin-top:1rem}
+  .btn:hover{background:var(--color-dark)}.btn:active{transform:scale(.98)}.btn:disabled{background:var(--text-faint);cursor:not-allowed}
+  .success{background:var(--color-light);border:1px solid rgba(42,157,143,.25);border-radius:var(--radius);padding:14px 18px;font-size:14px;color:var(--color-dark);text-align:center;display:none;margin-top:1rem;font-weight:500}
+  .error{background:#FEF0EB;border:1px solid rgba(250,70,22,.2);border-radius:var(--radius);padding:14px 18px;font-size:13px;color:#c64106;display:none;margin-top:1rem}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-logo">DC</div>
+  <div><div class="nav-title">Simple Access — Data Entry</div><div class="nav-sub">Dream Centers Dashboard</div></div>
+</nav>
+<main class="container">
+  <div class="card">
+    <div class="card-title">Counseling Patient Metrics</div>
+    <div class="fields fields-3">
+      <div class="field"><label>Total counseling patients</label><input type="number" id="sa_total_patients" placeholder="e.g. 312"><div class="hint">All time</div></div>
+      <div class="field"><label>Patients this month</label><input type="number" id="sa_patients_this_month" placeholder="e.g. 48"></div>
+      <div class="field"><label>Patients change</label><input type="text" id="sa_patients_change" placeholder="e.g. +12% vs. last month"></div>
+    </div>
+    <div class="trend-toggle">
+      <div class="trend-label" onclick="toggleTrend()"><span class="trend-arrow" id="arrow">▶</span>6-month patient trend</div>
+      <div class="trend-fields" id="trendFields">
+        <div class="month-grid">
+          <div class="month-heading">Patients</div>
+          <input class="mi" type="number" id="sa_0" placeholder="Oct"><input class="mi" type="number" id="sa_1" placeholder="Nov"><input class="mi" type="number" id="sa_2" placeholder="Dec"><input class="mi" type="number" id="sa_3" placeholder="Jan"><input class="mi" type="number" id="sa_4" placeholder="Feb"><input class="mi" type="number" id="sa_5" placeholder="Mar">
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="btn" id="submitBtn" onclick="submitData()">Save to Dashboard</button>
+  <div class="success" id="successMsg">✓ Data saved! The dashboard has been updated.</div>
+  <div class="error" id="errorMsg"></div>
+</main>
+<script>
+const SUPABASE_URL='https://kktwvlvqilblgzuxkzhu.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrdHd2bHZxaWxibGd6dXhremh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMTQwMTAsImV4cCI6MjA5MDU5MDAxMH0.w8eRa-kEPCgi6HDMma64VSwpAbGRUP2Zw1THBVtum5Q';
+function toggleTrend(){const f=document.getElementById('trendFields');const a=document.getElementById('arrow');const open=f.classList.toggle('visible');a.classList.toggle('open',open)}
+function v(id){return document.getElementById(id)?.value.trim()||null}
+function n(id){const x=parseFloat(document.getElementById(id)?.value);return isNaN(x)?null:x}
+function trend(ids){const arr=ids.map(id=>n(id));return arr.some(x=>x!==null)?JSON.stringify(arr):null}
+async function submitData(){
+  const btn=document.getElementById('submitBtn');
+  const succ=document.getElementById('successMsg');
+  const err=document.getElementById('errorMsg');
+  succ.style.display='none';err.style.display='none';
+  btn.disabled=true;btn.textContent='Saving...';
+  const payload={
+    updated_at:new Date().toISOString(),
+    sa_total_patients:n('sa_total_patients'),
+    sa_patients_this_month:n('sa_patients_this_month'),
+    sa_patients_change:v('sa_patients_change'),
+    sa_patients_trend:trend(['sa_0','sa_1','sa_2','sa_3','sa_4','sa_5']),
+  };
+  Object.keys(payload).forEach(k=>payload[k]===null&&delete payload[k]);
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/dashboard_data?id=eq.main`,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+    if(!res.ok)throw new Error(await res.text());
+    succ.style.display='block';
+  }catch(e){err.textContent='Error saving data: '+e.message;err.style.display='block';}
+  btn.disabled=false;btn.textContent='Save to Dashboard';
+}
+</script>
+</body>
+</html>
