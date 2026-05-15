@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: dc-dashboard-api
+    env: node
+    region: oregon
+    plan: starter
+    rootDir: server
+    buildCommand: npm install && node src/db/setup.js
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SALESFORCE_CLIENT_ID
+        sync: false
+      - key: SALESFORCE_CLIENT_SECRET
+        sync: false
+      - key: SALESFORCE_USERNAME
+        sync: false
+      - key: SALESFORCE_PASSWORD
+        sync: false
+      - key: SALESFORCE_SECURITY_TOKEN
+        sync: false
+      - key: SALESFORCE_LOGIN_URL
+        value: https://login.salesforce.com
+      - key: ATHENA_CLIENT_ID
+        sync: false
+      - key: ATHENA_CLIENT_SECRET
+        sync: false
+      - key: ATHENA_PRACTICE_ID
+        sync: false
+      - key: ATHENA_BASE_URL
+        value: https://api.athenahealth.com
+      - key: VIRTUOUS_API_KEY
+        sync: false
+      - key: VIRTUOUS_BASE_URL
+        value: https://api.virtuous.org
+      - key: VOLUNTEERHUB_API_KEY
+        sync: false
+      - key: VOLUNTEERHUB_ORG_ID
+        sync: false
+      - key: VOLUNTEERHUB_BASE_URL
+        value: https://api.volunteerhub.com
