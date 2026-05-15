@@ -20,7 +20,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://project-p8xtk.vercel.app
       - key: SALESFORCE_CLIENT_ID
         sync: false
       - key: SALESFORCE_CLIENT_SECRET
