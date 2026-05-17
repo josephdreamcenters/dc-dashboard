@@ -108,19 +108,38 @@ router.put('/:id', requireAuth, async (req, res, next) => {
       return res.status(403).json({ message: 'Insufficient permissions' })
     }
 
-    const { name, title, team_id, reports_to, role, part_time, active, password } = req.body
+    const { name, email, title, team_id, reports_to, role, part_time, active, password, current_password } = req.body
     const fields = [], values = []
     let i = 1
 
-    if (name)      { fields.push(`name = $${i++}`);      values.push(name) }
-    if (title)     { fields.push(`title = $${i++}`);     values.push(title) }
+    if (name)  { fields.push(`name = $${i++}`);  values.push(name) }
+    if (title) { fields.push(`title = $${i++}`); values.push(title) }
+
+    if (email && isSelf) {
+      if (!current_password) return res.status(400).json({ message: 'current_password required to change email' })
+      const { rows: pw } = await db.query('SELECT password_hash FROM users WHERE id = $1', [targetId])
+      if (!await bcrypt.compare(current_password, pw[0]?.password_hash ?? '')) {
+        return res.status(401).json({ message: 'Current password is incorrect' })
+      }
+      fields.push(`email = $${i++}`)
+      values.push(email.toLowerCase().trim())
+    }
+
     // Role, team, reports_to, active — admin/CEO only
-    if (isAdmin && role)        { fields.push(`role = $${i++}`);       values.push(role) }
-    if (isAdmin && team_id !== undefined) { fields.push(`team_id = $${i++}`); values.push(team_id) }
-    if (isAdmin && reports_to !== undefined) { fields.push(`reports_to = $${i++}`); values.push(reports_to) }
-    if (isAdmin && active !== undefined)  { fields.push(`active = $${i++}`);  values.push(active) }
-    if (isAdmin && part_time !== undefined) { fields.push(`part_time = $${i++}`); values.push(part_time) }
+    if (isAdmin && role)                         { fields.push(`role = $${i++}`);       values.push(role) }
+    if (isAdmin && team_id !== undefined)         { fields.push(`team_id = $${i++}`);    values.push(team_id) }
+    if (isAdmin && reports_to !== undefined)      { fields.push(`reports_to = $${i++}`); values.push(reports_to) }
+    if (isAdmin && active !== undefined)          { fields.push(`active = $${i++}`);     values.push(active) }
+    if (isAdmin && part_time !== undefined)       { fields.push(`part_time = $${i++}`);  values.push(part_time) }
+
     if (password && (isSelf || isAdmin)) {
+      if (isSelf && !isAdmin) {
+        if (!current_password) return res.status(400).json({ message: 'current_password required to change password' })
+        const { rows: pw } = await db.query('SELECT password_hash FROM users WHERE id = $1', [targetId])
+        if (!await bcrypt.compare(current_password, pw[0]?.password_hash ?? '')) {
+          return res.status(401).json({ message: 'Current password is incorrect' })
+        }
+      }
       const hash = await bcrypt.hash(password, 12)
       fields.push(`password_hash = $${i++}`)
       values.push(hash)

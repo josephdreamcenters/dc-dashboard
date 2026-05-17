@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import Dashboard from '../../pages/Dashboard'
+import Profile from '../../pages/Profile'
 import NotFound from '../../pages/NotFound'
 
 export default function Layout() {
@@ -14,6 +15,7 @@ export default function Layout() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
