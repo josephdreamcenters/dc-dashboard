@@ -71,6 +71,47 @@ function MilestoneTag({ status }) {
   )
 }
 
+function WIGRow({ wig }) {
+  const pct = wig.wig_type !== 'milestone'
+    ? calcPct(wig.start_value, wig.target_value, wig.current_value)
+    : null
+
+  return (
+    <div className="pt-3 first:pt-0">
+      <div className="flex items-start justify-between mb-1">
+        <p className="text-sm font-medium text-warm-800 leading-snug flex-1 pr-3">{wig.title}</p>
+        {wig.wig_type === 'milestone'
+          ? <MilestoneTag status={wig.milestone_status} />
+          : <span className="text-sm font-bold text-warm-900 shrink-0">{fmtNum(wig.wig_type, wig.current_value)}<span className="text-xs font-normal text-warm-400 ml-1">/ {fmtNum(wig.wig_type, wig.target_value)}</span></span>
+        }
+      </div>
+      {wig.wig_type !== 'milestone' && (
+        <>
+          <ProgressBar pct={pct} color={barColor(pct)} />
+          <p className="text-right text-xs text-warm-400 mt-0.5">{pct?.toFixed(1)}%</p>
+        </>
+      )}
+    </div>
+  )
+}
+
+function TeamWIGCard({ teamName, wigs }) {
+  const latestDate = wigs.map(w => w.as_of_date).filter(Boolean).sort().at(-1)
+  return (
+    <div className="card p-5 flex flex-col">
+      <p className="text-xs font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded self-start mb-3">{teamName}</p>
+      <div className="space-y-3 divide-y divide-warm-100 flex-1">
+        {wigs.map(wig => <WIGRow key={wig.id} wig={wig} />)}
+      </div>
+      {latestDate && (
+        <p className="text-xs text-warm-400 mt-3 pt-2 border-t border-warm-100">
+          Updated {fmtDate(latestDate)}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function WIGCard({ wig }) {
   const pct = wig.wig_type !== 'milestone'
     ? calcPct(wig.start_value, wig.target_value, wig.current_value)
@@ -196,15 +237,25 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Team WIGs */}
+      {/* Team WIGs — one card per team */}
       <h2 className="section-title">Team WIGs</h2>
       {wigs.length === 0 ? (
         <div className="card p-6 text-warm-500 text-sm">No active WIGs found.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {wigs.map(wig => <WIGCard key={wig.id} wig={wig} />)}
-        </div>
-      )}
+      ) : (() => {
+        const byTeam = wigs.reduce((acc, wig) => {
+          const key = wig.team_name || 'Unassigned'
+          if (!acc[key]) acc[key] = []
+          acc[key].push(wig)
+          return acc
+        }, {})
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {Object.entries(byTeam).map(([teamName, teamWigs]) => (
+              <TeamWIGCard key={teamName} teamName={teamName} wigs={teamWigs} />
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }
