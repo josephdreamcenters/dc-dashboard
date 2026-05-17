@@ -3,6 +3,7 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import Dashboard from '../../pages/Dashboard'
 import Profile from '../../pages/Profile'
+import OrgChart from '../../pages/OrgChart'
 import ComingSoon from '../../pages/ComingSoon'
 import NotFound from '../../pages/NotFound'
 
@@ -23,7 +24,7 @@ export default function Layout() {
             <Route path="/issues" element={<ComingSoon title="Issues" />} />
             <Route path="/meetings" element={<ComingSoon title="Meetings" />} />
             <Route path="/vision" element={<ComingSoon title="Vision" />} />
-            <Route path="/org-chart" element={<ComingSoon title="Accountability Chart" />} />
+            <Route path="/org-chart" element={<OrgChart />} />
             <Route path="/check-in" element={<ComingSoon title="Weekly Check-In" />} />
             <Route path="/reviews" element={<ComingSoon title="Quarterly Reviews" />} />
             <Route path="/admin" element={<ComingSoon title="Admin Panel" />} />
