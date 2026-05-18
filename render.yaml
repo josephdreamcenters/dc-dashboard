@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: starter
     rootDir: server
-    buildCommand: npm install && node src/db/setup.js
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
     envVars:
