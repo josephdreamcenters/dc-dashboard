@@ -7,6 +7,7 @@ import OrgChart from '../../pages/OrgChart'
 import Scorecard from '../../pages/Scorecard'
 import Todos from '../../pages/Todos'
 import Issues from '../../pages/Issues'
+import Meetings from '../../pages/Meetings'
 import ComingSoon from '../../pages/ComingSoon'
 import NotFound from '../../pages/NotFound'
 
@@ -25,7 +26,7 @@ export default function Layout() {
             <Route path="/wigs" element={<ComingSoon title="WIGs & Rocks" />} />
             <Route path="/todos" element={<Todos />} />
             <Route path="/issues" element={<Issues />} />
-            <Route path="/meetings" element={<ComingSoon title="Meetings" />} />
+            <Route path="/meetings" element={<Meetings />} />
             <Route path="/vision" element={<ComingSoon title="Vision" />} />
             <Route path="/org-chart" element={<OrgChart />} />
             <Route path="/check-in" element={<ComingSoon title="Weekly Check-In" />} />
