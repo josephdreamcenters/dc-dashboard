@@ -5,6 +5,7 @@ import Dashboard from '../../pages/Dashboard'
 import Profile from '../../pages/Profile'
 import OrgChart from '../../pages/OrgChart'
 import Scorecard from '../../pages/Scorecard'
+import Todos from '../../pages/Todos'
 import ComingSoon from '../../pages/ComingSoon'
 import NotFound from '../../pages/NotFound'
 
@@ -21,7 +22,7 @@ export default function Layout() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/scorecard" element={<Scorecard />} />
             <Route path="/wigs" element={<ComingSoon title="WIGs & Rocks" />} />
-            <Route path="/todos" element={<ComingSoon title="To-Dos" />} />
+            <Route path="/todos" element={<Todos />} />
             <Route path="/issues" element={<ComingSoon title="Issues" />} />
             <Route path="/meetings" element={<ComingSoon title="Meetings" />} />
             <Route path="/vision" element={<ComingSoon title="Vision" />} />
