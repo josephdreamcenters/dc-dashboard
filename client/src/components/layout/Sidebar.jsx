@@ -22,7 +22,7 @@ const navItems = [
   { to: '/issues',         label: 'Issues',               icon: ExclamationCircleIcon },
   { to: '/meetings',       label: 'Meetings',             icon: CalendarIcon },
   { to: '/vision',         label: 'Vision',               icon: DocumentTextIcon },
-  { to: '/org-chart',      label: 'Accountability Chart', icon: UsersIcon },
+  { to: '/org-chart',      label: 'Organizational Chart', icon: UsersIcon },
   { to: '/check-in',       label: 'Weekly Check-In',      icon: ClipboardDocumentListIcon },
   { to: '/reviews',        label: 'Quarterly Reviews',    icon: ClipboardDocumentCheckIcon },
 ]
