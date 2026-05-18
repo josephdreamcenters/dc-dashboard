@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const routes = require('./src/routes')
 const errorHandler = require('./src/middleware/errorHandler')
+const { migrate } = require('./src/db/migrate')
 require('./src/cron')
 
 const app = express()
@@ -27,6 +28,6 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date()
 app.use('/api', routes)
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  console.log(`DC Dashboard API running on port ${PORT}`)
-})
+migrate()
+  .then(() => app.listen(PORT, () => console.log(`DC Dashboard API running on port ${PORT}`)))
+  .catch(err => { console.error('Migration failed — server not started:', err); process.exit(1) })

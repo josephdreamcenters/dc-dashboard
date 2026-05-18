@@ -4,6 +4,7 @@ import TopBar from './TopBar'
 import Dashboard from '../../pages/Dashboard'
 import Profile from '../../pages/Profile'
 import OrgChart from '../../pages/OrgChart'
+import Scorecard from '../../pages/Scorecard'
 import ComingSoon from '../../pages/ComingSoon'
 import NotFound from '../../pages/NotFound'
 
@@ -18,7 +19,7 @@ export default function Layout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/scorecard" element={<ComingSoon title="Scorecard" />} />
+            <Route path="/scorecard" element={<Scorecard />} />
             <Route path="/wigs" element={<ComingSoon title="WIGs & Rocks" />} />
             <Route path="/todos" element={<ComingSoon title="To-Dos" />} />
             <Route path="/issues" element={<ComingSoon title="Issues" />} />

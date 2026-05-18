@@ -268,6 +268,10 @@ CREATE INDEX IF NOT EXISTS idx_issues_team ON issues(team_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read);
 CREATE INDEX IF NOT EXISTS idx_weekly_checkins_user ON weekly_checkins(user_id, week_start);
 CREATE INDEX IF NOT EXISTS idx_quarterly_reviews_employee ON quarterly_reviews(employee_id);
+
+-- Add weekly_target to lead_measures (idempotent)
+ALTER TABLE lead_measures ADD COLUMN IF NOT EXISTS weekly_target NUMERIC;
+CREATE INDEX IF NOT EXISTS idx_lead_measure_entries_measure_week ON lead_measure_entries(lead_measure_id, week_start);
 `
 
 async function migrate() {
