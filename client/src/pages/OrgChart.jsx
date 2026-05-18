@@ -46,7 +46,8 @@ function PersonCard({ node }) {
 }
 
 function OrgNode({ node }) {
-  const hasChildren = node.children?.length > 0
+  const children = node.children ?? []
+  const hasChildren = children.length > 0
 
   return (
     <div className="flex flex-col items-center">
@@ -54,43 +55,37 @@ function OrgNode({ node }) {
 
       {hasChildren && (
         <>
-          {/* Vertical line down from parent */}
+          {/* Vertical line down from parent card */}
           <div className="w-px h-6 bg-warm-300" />
 
-          {node.children.length === 1 ? (
-            /* Single child — just a straight line */
-            <OrgNode node={node.children[0]} />
+          {children.length === 1 ? (
+            <OrgNode node={children[0]} />
           ) : (
-            <div className="flex flex-col items-center">
-              {/* Horizontal connector bar */}
-              <div className="flex items-start">
-                {node.children.map((child, i) => (
-                  <div key={child.id} className="flex flex-col items-center">
-                    {/* Left cap, center, right cap for horizontal line */}
-                    <div className={`h-px bg-warm-300 ${
-                      i === 0 ? 'w-1/2 self-end' :
-                      i === node.children.length - 1 ? 'w-1/2 self-start' :
-                      'w-full'
-                    }`} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Children row with horizontal line above */}
-              <div className="relative flex gap-6 items-start">
-                {/* Full-width horizontal line */}
-                <div
-                  className="absolute top-0 left-[104px] right-[104px] h-px bg-warm-300"
-                  style={{ left: '50%', transform: 'none' }}
-                />
-                {node.children.map((child, idx) => (
-                  <div key={child.id} className="flex flex-col items-center">
-                    {/* Short vertical drop to each child */}
-                    <div className="w-px h-6 bg-warm-300" />
+            <div className="flex items-start">
+              {children.map((child, i) => {
+                const isFirst = i === 0
+                const isLast = i === children.length - 1
+                return (
+                  <div key={child.id} className="flex flex-col items-center px-4">
+                    {/*
+                      Each child contributes its half of the horizontal connector bar.
+                      Left half drawn for all except the first child.
+                      Right half drawn for all except the last child.
+                      Vertical drop always drawn center-to-bottom.
+                    */}
+                    <div className="relative w-full h-6">
+                      {!isFirst && (
+                        <div className="absolute top-0 left-0 right-1/2 h-px bg-warm-300" />
+                      )}
+                      {!isLast && (
+                        <div className="absolute top-0 left-1/2 right-0 h-px bg-warm-300" />
+                      )}
+                      <div className="absolute top-0 bottom-0 left-1/2 w-px bg-warm-300" />
+                    </div>
                     <OrgNode node={child} />
                   </div>
-                ))}
-              </div>
+                )
+              })}
             </div>
           )}
         </>
@@ -110,7 +105,6 @@ function buildTree(users) {
       roots.push(map[u.id])
     }
   })
-  // Sort children: directors first, then staff, alphabetically within
   const sortChildren = (node) => {
     node.children.sort((a, b) => {
       const order = { ceo: 0, admin: 1, director: 2, staff: 3 }
@@ -123,10 +117,15 @@ function buildTree(users) {
   return roots.map(sortChildren)
 }
 
+const ZOOM_STEP = 0.1
+const ZOOM_MIN = 0.3
+const ZOOM_MAX = 1.5
+
 export default function OrgChart() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [scale, setScale] = useState(1)
 
   useEffect(() => {
     api.get('/users')
@@ -134,6 +133,10 @@ export default function OrgChart() {
       .catch(() => setError('Failed to load org chart'))
       .finally(() => setLoading(false))
   }, [])
+
+  const zoomIn  = () => setScale(s => Math.min(ZOOM_MAX, Math.round((s + ZOOM_STEP) * 10) / 10))
+  const zoomOut = () => setScale(s => Math.max(ZOOM_MIN, Math.round((s - ZOOM_STEP) * 10) / 10))
+  const zoomReset = () => setScale(1)
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -166,21 +169,46 @@ export default function OrgChart() {
           <h1 className="text-2xl font-semibold text-warm-900 mb-1">Organizational Chart</h1>
           <p className="text-warm-500 text-sm">Dream Centers of Colorado Springs · {users.length} people</p>
         </div>
-        <div className="flex items-center gap-3">
-          {legend.map(({ role, label }) => (
-            <div key={role} className="flex items-center gap-1.5">
-              <div className={`w-3 h-3 rounded border ${ROLE_STYLES[role]}`} />
-              <span className="text-xs text-warm-600">{label}</span>
-            </div>
-          ))}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {legend.map(({ role, label }) => (
+              <div key={role} className="flex items-center gap-1.5">
+                <div className={`w-3 h-3 rounded border ${ROLE_STYLES[role]}`} />
+                <span className="text-xs text-warm-600">{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 border border-warm-200 rounded-lg bg-white shadow-sm px-1 py-1">
+            <button
+              onClick={zoomOut}
+              disabled={scale <= ZOOM_MIN}
+              className="w-7 h-7 flex items-center justify-center rounded text-warm-600 hover:bg-warm-100 disabled:opacity-30 disabled:cursor-not-allowed text-base leading-none"
+              title="Zoom out"
+            >−</button>
+            <button
+              onClick={zoomReset}
+              className="px-2 h-7 text-xs font-medium text-warm-600 hover:bg-warm-100 rounded min-w-[3rem]"
+              title="Reset zoom"
+            >
+              {Math.round(scale * 100)}%
+            </button>
+            <button
+              onClick={zoomIn}
+              disabled={scale >= ZOOM_MAX}
+              className="w-7 h-7 flex items-center justify-center rounded text-warm-600 hover:bg-warm-100 disabled:opacity-30 disabled:cursor-not-allowed text-base leading-none"
+              title="Zoom in"
+            >+</button>
+          </div>
         </div>
       </div>
 
-      <div className="card p-8 overflow-auto">
-        <div className="flex justify-center min-w-max mx-auto">
-          {roots.map(root => (
-            <OrgNode key={root.id} node={root} />
-          ))}
+      <div className="card overflow-auto">
+        <div style={{ zoom: scale }}>
+          <div className="flex justify-center min-w-max mx-auto p-8">
+            {roots.map(root => (
+              <OrgNode key={root.id} node={root} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
