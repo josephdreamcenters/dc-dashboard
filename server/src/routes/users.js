@@ -126,11 +126,12 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     }
 
     // Role, team, reports_to, active — admin/CEO only
-    if (isAdmin && role)                         { fields.push(`role = $${i++}`);       values.push(role) }
-    if (isAdmin && team_id !== undefined)         { fields.push(`team_id = $${i++}`);    values.push(team_id) }
-    if (isAdmin && reports_to !== undefined)      { fields.push(`reports_to = $${i++}`); values.push(reports_to) }
-    if (isAdmin && active !== undefined)          { fields.push(`active = $${i++}`);     values.push(active) }
-    if (isAdmin && part_time !== undefined)       { fields.push(`part_time = $${i++}`);  values.push(part_time) }
+    const canManage = isAdmin || isCEO
+    if (canManage && role)                    { fields.push(`role = $${i++}`);       values.push(role) }
+    if (canManage && team_id !== undefined)   { fields.push(`team_id = $${i++}`);    values.push(team_id) }
+    if (canManage && reports_to !== undefined){ fields.push(`reports_to = $${i++}`); values.push(reports_to) }
+    if (canManage && active !== undefined)    { fields.push(`active = $${i++}`);     values.push(active) }
+    if (canManage && part_time !== undefined) { fields.push(`part_time = $${i++}`);  values.push(part_time) }
 
     if (password && (isSelf || isAdmin)) {
       if (isSelf && !isAdmin) {

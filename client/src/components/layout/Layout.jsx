@@ -8,6 +8,9 @@ import Scorecard from '../../pages/Scorecard'
 import Todos from '../../pages/Todos'
 import Issues from '../../pages/Issues'
 import Meetings from '../../pages/Meetings'
+import Vision from '../../pages/Vision'
+import Reviews from '../../pages/Reviews'
+import Admin from '../../pages/Admin'
 import ComingSoon from '../../pages/ComingSoon'
 import NotFound from '../../pages/NotFound'
 
@@ -27,11 +30,11 @@ export default function Layout() {
             <Route path="/todos" element={<Todos />} />
             <Route path="/issues" element={<Issues />} />
             <Route path="/meetings" element={<Meetings />} />
-            <Route path="/vision" element={<ComingSoon title="Vision" />} />
+            <Route path="/vision" element={<Vision />} />
             <Route path="/org-chart" element={<OrgChart />} />
             <Route path="/check-in" element={<ComingSoon title="Weekly Check-In" />} />
-            <Route path="/reviews" element={<ComingSoon title="Quarterly Reviews" />} />
-            <Route path="/admin" element={<ComingSoon title="Admin Panel" />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
