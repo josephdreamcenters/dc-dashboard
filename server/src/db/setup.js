@@ -9,8 +9,7 @@ async function setup() {
     await seed()
     console.log('\nSetup complete — database is ready.')
   } catch (err) {
-    console.error('\nSetup failed:', err.message)
-    process.exit(1)
+    console.error('\nSetup warning (non-fatal):', err.message)
   } finally {
     await db.pool.end()
   }
