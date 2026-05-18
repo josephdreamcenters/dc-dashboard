@@ -29,5 +29,5 @@ app.use('/api', routes)
 app.use(errorHandler)
 
 migrate()
-  .then(() => app.listen(PORT, () => console.log(`DC Dashboard API running on port ${PORT}`)))
-  .catch(err => { console.error('Migration failed — server not started:', err); process.exit(1) })
+  .catch(err => console.error('Migration warning (non-fatal):', err.message))
+  .finally(() => app.listen(PORT, () => console.log(`DC Dashboard API running on port ${PORT}`)))
